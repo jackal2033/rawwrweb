@@ -58,16 +58,26 @@ public class WebRequest implements Request {
 
     // Headers sent within Response
     private HashMap<String, String> responseHeaders;
-
+    private final boolean viewSource;
     public WebRequest(String url) {
         // Inefficient way of finding parts; but finals and loops don't mix
 
         /*
-        currently dealing with http(s)://example.com:8063/path/fi.le
+        currently dealing with (view-source):http(s)://example.com:8063/path/fi.le
         split on :// to get scheme
          */
         String[] parts = url.split("://", 2);
-        this.scheme = parts[0];
+        if (parts[0].contains(":")) {
+            String[] tmp = parts[0].split(":",2);
+            if (tmp[0].equals("view-source"))
+                viewSource = true;
+            else
+                throw new RuntimeException("Invalid scheme-prefix of: " + tmp[0]);
+            this.scheme = tmp[1];
+        } else {
+            this.scheme = parts[0];
+            viewSource = false;
+        }
         assert this.scheme.equals("http") || this.scheme.equals("https");
 
         /*
@@ -181,6 +191,9 @@ public class WebRequest implements Request {
                     responseHeaders.put(parts[0], parts[1]);
                 }
             } else {
+                if (viewSource)
+                    body.append(String.format("%s\n", line));
+                else
                     body.append(String.format("%s\n", line.strip()));
             }
         }
@@ -194,5 +207,9 @@ public class WebRequest implements Request {
     @Override
     public String  getContent() {
         return this.responseContent.toString();
+    }
+
+    public boolean getViewSource() {
+        return this.viewSource;
     }
 }
