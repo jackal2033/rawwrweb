@@ -114,6 +114,8 @@ public class WebRequest implements Request {
             makeHttpRequest(request);
         else
             throw new RuntimeException("Invalid scheme of: " + this.scheme);
+
+        this.processContent();
     }
 
     private void makeHttpRequest(String request) {
